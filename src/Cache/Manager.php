@@ -117,6 +117,15 @@ class Manager {
      * @param array $options
      * @return CacheItemPoolInterface
      */
+    protected function filePool(): CacheItemPoolInterface {
+        $directory = $this->options['directory'] ?? '';
+        return new FilesystemAdapter('', 0, $directory, $this->getMarshaller());
+    }
+
+    /**
+     * @param array $options
+     * @return CacheItemPoolInterface
+     */
     protected function redisPool(): CacheItemPoolInterface {
         $redis = new Redis($this->options);
         return new RedisAdapter($redis->conn(), '', 0, $this->getMarshaller());
