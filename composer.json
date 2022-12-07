@@ -1,0 +1,27 @@
+{
+    "name": "binsuper/yaf-project-kernel",
+    "type": "framework",
+    "authors": [
+        {
+            "name": "Gino Huang",
+            "email": "binsuper@126.com"
+        }
+    ],
+    "license": "MIT",
+    "require": {
+        "php": ">=7.2.0",
+        "ext-yaf": "^3.0",
+        "nette/http": "^3.1",
+        "nikic/fast-route": "^1.3",
+        "monolog/monolog": "^2.8",
+        "binsuper/phplib": "~0.1",
+        "vlucas/phpdotenv": "^4.0",
+        "illuminate/database": "^7.30",
+        "symfony/cache": "^4.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Gino\\Yaf\\Kernel\\": "src"
+        }
+    }
+}
