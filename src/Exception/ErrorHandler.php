@@ -4,6 +4,8 @@ namespace Gino\Yaf\Kernel\Exception;
 
 use Gino\Yaf\Kernel\App;
 use Gino\Yaf\Kernel\Log;
+use Gino\Yaf\Kernel\Response;
+use Yaf\Request_Abstract;
 
 class ErrorHandler {
 
@@ -69,9 +71,17 @@ class ErrorHandler {
             case \Yaf\Exception\LoadFailed\Controller::class:
             case \Yaf\Exception\LoadFailed\Module::class:
             case \Yaf\Exception\LoadFailed\Action::class:
+                static::pageNotFound(App::request()->getRequestUri());
+                static::logger()->debug($ex->getMessage());
+                return;
             case MiddlewareBreakOff::class:
                 static::logger()->debug($ex->getMessage());
                 return;
+            default:
+                App::response()
+                   ->setCode(Response::S500_INTERNAL_SERVER_ERROR)
+                   ->setBody('server error');
+                break;
         }
         static::record($ex);
     }
@@ -90,6 +100,17 @@ class ErrorHandler {
         if ($ex->getPrevious()) {
             static::record($ex->getPrevious());
         }
+    }
+
+    /**
+     * 找不到页面
+     *
+     * @param string $page
+     */
+    public static function pageNotFound(string $page) {
+        App::response()
+           ->setCode(Response::S404_NOT_FOUND)
+           ->setBody('page not found');
     }
 
 }

@@ -10,16 +10,52 @@ class Request {
     /** @var \Nette\Http\Request */
     protected $_handler;
 
+    /** @var ArrayObject */
+    protected $_query;
+
+    /** @var ArrayObject */
+    protected $_post;
+
+    protected $_rawBody;
+
+    /** @var ArrayObject */
+    protected $_headers;
+
+    /** @var ArrayObject */
+    protected $_cookies;
+
     public function __construct() {
         $factory        = new RequestFactory();
         $this->_handler = $factory->fromGlobals();
+
+        $this->_query   = ArrayObject::from($this->_handler->getQuery());
+        $this->_post    = ArrayObject::from($this->_handler->getPost());
+        $this->_rawBody = $this->_handler->getRawBody();
+        $this->_headers = ArrayObject::from($this->_handler->getHeaders());
+        $this->_cookies = ArrayObject::from($this->_handler->getCookies());
+
+        if (strtolower($this->_headers->get('content-type', '')) === 'application/json') {
+            $this->_post = ArrayObject::from(json_decode($this->_rawBody, true) ?: []);
+        }
     }
 
     /**
      * @return \Nette\Http\Request
      */
-    public function handler() {
+    protected function handler() {
         return $this->_handler;
+    }
+
+    /**
+     * Set variables for query parameter
+     *
+     * @param array|string $key
+     * @param null|mixed $val
+     * @return $this
+     */
+    public function setQuery($key, $val = null) {
+        $this->_query->set($key, $val);
+        return $this;
     }
 
     /**
@@ -39,7 +75,7 @@ class Request {
      * @return array|ArrayObject|mixed|null
      */
     public function input($key = null, $def = null) {
-        return ArrayObject::from($this->post() + $this->query())->get($key, $def);
+        return ArrayObject::from($this->_post->toArray() + $this->_query->toArray())->get($key, $def);
     }
 
     /**
@@ -51,7 +87,7 @@ class Request {
      * @return mixed
      */
     public function query($key = null, $def = null) {
-        return ArrayObject::from($this->handler()->getQuery())->get($key, $def);
+        return $this->_query->get($key, $def);
     }
 
     /**
@@ -63,25 +99,7 @@ class Request {
      * @return mixed
      */
     public function post($key = null, $def = null) {
-        return ArrayObject::from($this->handler()->getPost())->get($key, $def);
-    }
-
-    /**
-     * Return variable provided to the script via which is json string of HTTP request body.
-     * If no key is passed, returns the entire array.
-     *
-     * @param mixed|null $key
-     * @param mixed $def
-     * @return mixed|null
-     */
-    public function json($key = null, $def = null) {
-        if (!isset($this->_json_data)) {
-            $this->_json_data = json_decode($this->rawBody(), true);
-        }
-        if (!$this->_json_data) {
-            return $def;
-        }
-        return ArrayObject::from($this->_json_data)->get($key, $def);
+        return $this->_post->get($key, $def);
     }
 
     /**
@@ -90,7 +108,7 @@ class Request {
      * @return string
      */
     public function rawBody(): string {
-        return $this->_handler->getRawBody();
+        return $this->_rawBody;
     }
 
     /**
@@ -108,7 +126,7 @@ class Request {
                 $v = strtolower($v);
             });
         }
-        return ArrayObject::from($this->handler()->getHeaders())->get($key, $def);
+        return $this->_headers->get($key, $def);
     }
 
     /**
@@ -135,7 +153,7 @@ class Request {
      * @return mixed
      */
     public function cookie($key = null, $def = null) {
-        return ArrayObject::from($this->handler()->getCookies())->get($key, $def);
+        return $this->_cookies->get($key, $def);
     }
 
     /**
@@ -143,8 +161,17 @@ class Request {
      *
      * @return string|null
      */
-    public function getClientIp() {
+    public function getRemoteAddress(): ?string {
         return $this->handler()->getRemoteAddress();
+    }
+
+    /**
+     * Returns the host of the remote client.
+     *
+     * @return string|null
+     */
+    public function getRemoteHost(): ?string {
+        return $this->handler()->getRemoteHost();
     }
 
     /**
@@ -166,12 +193,11 @@ class Request {
     }
 
     /**
-     * Returns the host of the remote client.
-     *
-     * @return string|null
+     * @return string
      */
-    public function getRemoteHost(): ?string {
-        return $this->handler()->getRemoteHost();
+    public function getRequestUri(): string {
+        return $this->handler()->getUrl()->getPath();
     }
+
 
 }

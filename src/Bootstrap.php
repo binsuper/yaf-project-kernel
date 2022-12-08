@@ -23,12 +23,20 @@ class Bootstrap extends Bootstrap_Abstract {
     public function _initException(Dispatcher $dispatcher) {
         // 处理错误
         set_error_handler(function () {
-            return forward_static_call([$this->error_handler_class, 'error'], ...func_get_args());
+            $status = forward_static_call([$this->error_handler_class, 'error'], ...func_get_args());
+
+            // 异常阻断后刷新内容
+            App::response()->flush();
+
+            return $status;
         });
 
         // 处理异常
         set_exception_handler(function () {
             forward_static_call([$this->error_handler_class, 'exception'], ...func_get_args());
+
+            // 异常阻断后刷新内容
+            App::response()->flush();
         });
     }
 

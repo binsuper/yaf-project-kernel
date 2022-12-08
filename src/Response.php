@@ -155,7 +155,7 @@ class Response {
      * @return $this
      */
     public function setCode(int $code, ?string $reason = null) {
-        $this->handler()->setCode($code, $reason);
+        $this->handler()->setCode($code, $reason ?: (static::REASON_PHRASES[$code] ?? null));
         return $this;
     }
 

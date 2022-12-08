@@ -19,8 +19,7 @@ class Route implements \Yaf\Route_Interface {
     public function __construct() {
         // 初始化路由
         try {
-            $config           = App::config()->get('router.0', function () {
-            });
+            $config           = App::config()->get('router.0', function () {});
             $this->dispatcher = simpleDispatcher($config, ['routeCollector' => RouteCollector::class]);
         } catch (\Throwable $ex) {
             throw BadConfigurationException::invalid('router.0', $ex);
@@ -65,10 +64,10 @@ class Route implements \Yaf\Route_Interface {
         $request->setModuleName($module);
         $request->setControllerName($controller);
         $request->setActionName($action);
-        $request->setParam($vars);
-        $request->setParam(array_merge($vars, App::request()->all()));
         // 中间件
         $request->setParam(self::MIDDLEWARE, $middleware);
+        // 参数
+        App::request()->setQuery($vars);
 
         return true;
     }
