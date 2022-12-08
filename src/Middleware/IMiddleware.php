@@ -2,11 +2,11 @@
 
 namespace Gino\Yaf\Kernel\Middleware;
 
-use Yaf\Request_Abstract;
+use Gino\Yaf\Kernel\Request;
 use Closure;
 
 interface IMiddleware {
 
-    public function handler(Request_Abstract $request, Closure $next);
+    public function handler(Request $request, Closure $next);
 
 }

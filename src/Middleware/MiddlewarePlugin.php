@@ -4,6 +4,7 @@ namespace Gino\Yaf\Kernel\Middleware;
 
 use Gino\Yaf\Kernel\Exception\MiddlewareFailure;
 use Gino\Yaf\Kernel\App;
+use Gino\Yaf\Kernel\Request;
 use Gino\Yaf\Kernel\Router\Route;
 use Gino\Phplib\ArrayObject;
 use Yaf\Request_Abstract;
@@ -42,7 +43,7 @@ class MiddlewarePlugin extends Plugin_Abstract {
             $name = $class;
         });
 
-        $this->nextCall($request, $middlewares);
+        $this->nextCall(App::request(), $middlewares);
 
         return true;
     }
@@ -59,11 +60,11 @@ class MiddlewarePlugin extends Plugin_Abstract {
     /**
      * 执行中间件
      *
-     * @param Request_Abstract $request
+     * @param Request $request
      * @param array $middlewares
      * @throws MiddlewareFailure
      */
-    public function nextCall(Request_Abstract $request, array &$middlewares) {
+    public function nextCall(Request $request, array &$middlewares) {
         if (empty($middlewares)) return;
 
         $class_name = array_shift($middlewares);
