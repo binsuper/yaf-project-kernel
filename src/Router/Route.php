@@ -66,7 +66,7 @@ class Route implements \Yaf\Route_Interface {
         $request->setControllerName($controller);
         $request->setActionName($action);
         $request->setParam($vars);
-        $request->setParam(array_merge($vars, App::request()->postGet()));
+        $request->setParam(array_merge($vars, App::request()->all()));
         // 中间件
         $request->setParam(self::MIDDLEWARE, $middleware);
 
