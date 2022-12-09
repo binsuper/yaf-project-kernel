@@ -2,8 +2,10 @@
 
 namespace Gino\Yaf\Kernel\Middleware;
 
+use Gino\Yaf\Kernel\Exception\MiddlewareBreakOff;
 use Gino\Yaf\Kernel\Exception\MiddlewareFailure;
 use Gino\Yaf\Kernel\App;
+use Gino\Yaf\Kernel\Log;
 use Gino\Yaf\Kernel\Request;
 use Gino\Yaf\Kernel\Router\Route;
 use Gino\Phplib\ArrayObject;
@@ -13,6 +15,8 @@ use \Yaf\Plugin_Abstract;
 
 class MiddlewarePlugin extends Plugin_Abstract {
 
+    const IS_CALL = '!@#middlewar-called#@!';
+
     /** @var ArrayObject */
     protected $classes;
 
@@ -21,17 +25,41 @@ class MiddlewarePlugin extends Plugin_Abstract {
     }
 
     /**
-     * 如果在一个请求处理过程中, 发生了forward, 则这个事件会被触发多次
+     * 控制器分发前
      *
      * @param Request_Abstract $request
      * @param Response_Abstract $response
      * @return bool
+     * @throws MiddlewareFailure
      */
-    public function preDispatch(Request_Abstract $request, Response_Abstract $response) {
+    public function dispatchLoopStartup(Request_Abstract $request, Response_Abstract $response) {
+        $this->doHandler($request, $response);
+        return true;
+    }
+
+    /**
+     * 控制器分发后
+     *
+     * @param Request_Abstract $request
+     * @param Response_Abstract $response
+     * @return bool
+     * @throws MiddlewareFailure
+     */
+    public function dispatchLoopShutdown(Request_Abstract $request, Response_Abstract $response) {
+        $this->doShutdown($request, $response);
+        return true;
+    }
+
+    /**
+     * @param Request_Abstract $request
+     * @param Response_Abstract $response
+     * @return bool
+     * @throws MiddlewareFailure
+     */
+    public function doHandler(Request_Abstract $request, Response_Abstract $response) {
         $middlewares = $this->getMiddlewares($request);
 
         if (empty($middlewares)) {
-            // nothing
             return true;
         }
 
@@ -43,8 +71,39 @@ class MiddlewarePlugin extends Plugin_Abstract {
             $name = $class;
         });
 
-        $this->nextCall(App::request(), $middlewares);
+        $called = [];
 
+        try {
+            $this->nextCall(App::request(), $middlewares, function (IMiddleware $middleware, callable $next) use ($request, &$called) {
+                $middleware->handler(App::request(), $next);
+                // 执行后再执行
+                array_unshift($called, $middleware);
+                $request->setParam(static::IS_CALL, $called);
+            });
+        } catch (MiddlewareBreakOff $ex) {
+            $this->doShutdown($request, $response);
+            throw $ex;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param Request_Abstract $request
+     * @param Response_Abstract $response
+     * @return bool
+     * @throws MiddlewareFailure
+     */
+    public function doShutdown(Request_Abstract $request, Response_Abstract $response) {
+        $middlewares = $this->getCalledMiddlewares($request);
+
+        if (empty($middlewares)) {
+            return true;
+        }
+
+        $this->nextCall(App::request(), $middlewares, function (IMiddleware $middleware, callable $next) {
+            $middleware->shutdown(App::request(), $next);
+        });
         return true;
     }
 
@@ -58,25 +117,39 @@ class MiddlewarePlugin extends Plugin_Abstract {
     }
 
     /**
+     * 获取已执行的中间件对象，倒叙
+     *
+     * @return array<IMiddleware>
+     */
+    public function getCalledMiddlewares(Request_Abstract $request): array {
+        return $request->getParam(static::IS_CALL, []);
+    }
+
+    /**
      * 执行中间件
      *
      * @param Request $request
      * @param array $middlewares
      * @throws MiddlewareFailure
      */
-    public function nextCall(Request $request, array &$middlewares) {
+    public function nextCall(Request $request, array &$middlewares, callable $callback) {
         if (empty($middlewares)) return;
 
         $class_name = array_shift($middlewares);
 
-        $object = new $class_name();
-        if (!($object instanceof IMiddleware)) {
-            throw new MiddlewareFailure('unsupported middleware ' . $class_name);
+        if ($class_name instanceof IMiddleware) {
+            $object = $class_name;
+        } else {
+            $object = new $class_name();
+            if (!($object instanceof IMiddleware)) {
+                throw new MiddlewareFailure('unsupported middleware ' . $class_name);
+            }
         }
 
-        $object->handler($request, function () use ($request, $middlewares) {
-            $this->nextCall($request, $middlewares);
+        $callback($object, function () use ($request, $middlewares, $callback) {
+            $this->nextCall($request, $middlewares, $callback);
         });
+
     }
 
 }

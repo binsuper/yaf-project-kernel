@@ -9,4 +9,6 @@ interface IMiddleware {
 
     public function handler(Request $request, Closure $next);
 
+    public function shutdown(Request $request, Closure $next);
+
 }
