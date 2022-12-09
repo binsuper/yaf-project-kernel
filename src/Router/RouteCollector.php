@@ -2,11 +2,10 @@
 
 namespace Gino\Yaf\Kernel\Router;
 
-class RouteCollector extends \FastRoute\RouteCollector {
+use FastRoute\DataGenerator;
+use FastRoute\RouteParser;
 
-    const SCOPE_NULL  = 0;
-    const SCOPE_ONE   = 1;
-    const SCOPE_GROUP = 2;
+class RouteCollector extends \FastRoute\RouteCollector {
 
     /** @var array|false */
     protected $current_middlewares = false;
@@ -29,14 +28,17 @@ class RouteCollector extends \FastRoute\RouteCollector {
     }
 
     /**
-     * @inheritDoc
+     * @param string|string[] $httpMethod
+     * @param string $route
+     * @param mixed $handler
+     * @return $this
      */
     public function addRoute($httpMethod, $route, $handler) {
         if ($route[0] !== '/') {
             $route = '/' . $route;
         }
 
-        $current_middlewares       = $this->current_middlewares ?: $this->current_group_middlewares;
+        $current_middlewares       = array_merge($this->current_group_middlewares ?: [], $this->current_middlewares ?: []);
         $this->current_middlewares = false;
 
         $data['route'] = $handler;
@@ -46,15 +48,24 @@ class RouteCollector extends \FastRoute\RouteCollector {
 
         parent::addRoute($httpMethod, $route, $data);
 
+        return $this;
     }
 
     /**
-     * @param string $prefix
+     * @param string|callable $prefix
      * @param callable $callback
+     * @return $this
      */
-    public function addGroup($prefix, callable $callback) {
+    public function addGroup($prefix, ?callable $callback = null) {
+
+        // support 1 arguments
+        if (is_callable($prefix)) {
+            $callback = $prefix;
+            $prefix   = '';
+        }
+
         $current_group_middlewares       = $this->current_group_middlewares;
-        $this->current_group_middlewares = $this->current_middlewares ?: $current_group_middlewares;
+        $this->current_group_middlewares = array_merge($current_group_middlewares ?: [], $this->current_middlewares ?: []);
         $this->current_middlewares       = false;
 
         parent::addGroup($prefix, function () use ($callback) {
@@ -62,6 +73,18 @@ class RouteCollector extends \FastRoute\RouteCollector {
         });
 
         $this->current_group_middlewares = $current_group_middlewares;
+
+        return $this;
+    }
+
+
+    /**
+     * @param $prefix
+     * @param callable $callback
+     * @return $this
+     */
+    public function group($prefix, ?callable $callback = null) {
+        return $this->addGroup($prefix, $callback);
     }
 
 

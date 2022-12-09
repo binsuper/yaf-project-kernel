@@ -7,22 +7,31 @@ use Gino\Yaf\Kernel\App;
 use Gino\Yaf\Kernel\Log;
 use FastRoute\Dispatcher;
 use Yaf\Application;
-use function FastRoute\simpleDispatcher;
 
 class Route implements \Yaf\Route_Interface {
+
 
     const MIDDLEWARE = '!@#middlewar#@!';
 
     /** @var Dispatcher */
     public $dispatcher;
 
+
     public function __construct() {
         // 初始化路由
+        $this->dispatcher = $this->getRouteDispatcher();
+    }
+
+    /**
+     *  路由
+     *
+     * @return Dispatcher
+     */
+    public function getRouteDispatcher() {
         try {
-            $config           = App::config()->get('router.0', function () {});
-            $this->dispatcher = simpleDispatcher($config, ['routeCollector' => RouteCollector::class]);
+            return new Dispatcher\GroupCountBased(App::config()->get('router'));
         } catch (\Throwable $ex) {
-            throw BadConfigurationException::invalid('router.0', $ex);
+            throw BadConfigurationException::invalid('router', $ex);
         }
     }
 
