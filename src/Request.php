@@ -47,6 +47,27 @@ class Request {
     }
 
     /**
+     * @return string
+     */
+    public function getModuleName() {
+        return \Yaf\Application::app()->getDispatcher()->getRequest()->getModuleName();
+    }
+
+    /**
+     * @return string
+     */
+    public function getControllerName() {
+        return \Yaf\Application::app()->getDispatcher()->getRequest()->getControllerName();
+    }
+
+    /**
+     * @return string
+     */
+    public function getActionName() {
+        return \Yaf\Application::app()->getDispatcher()->getRequest()->getActionName();
+    }
+
+    /**
      * @return ActuallyRequest
      */
     protected function operator(): ActuallyRequest {
