@@ -33,7 +33,9 @@ class Request {
         $this->_query   = ArrayObject::from($request->query->all());
         $this->_post    = ArrayObject::from($request->request->all());
         $this->_rawBody = $request->getContent();
-        $this->_headers = ArrayObject::from($request->headers->all());
+        $this->_headers = ArrayObject::from(array_map(function ($v) {
+            return $v[0] ?? '';
+        }, $request->headers->all()));
         $this->_cookies = ArrayObject::from($request->cookies->all());
         $this->_servers = ArrayObject::from($request->server->all());
 
