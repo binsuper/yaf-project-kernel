@@ -209,7 +209,6 @@ class Response {
      */
     public function flush() {
         $this->display();
-
     }
 
 }
