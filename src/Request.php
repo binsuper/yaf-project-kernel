@@ -3,12 +3,12 @@
 namespace Gino\Yaf\Kernel;
 
 use Gino\Phplib\ArrayObject;
-use Nette\Http\RequestFactory;
+use \Symfony\Component\HttpFoundation\Request as ActuallyRequest;
 
 class Request {
 
-    /** @var \Nette\Http\Request */
-    protected $_handler;
+    /** @var ActuallyRequest */
+    protected $_operator;
 
     /** @var ArrayObject */
     protected $_query;
@@ -24,26 +24,31 @@ class Request {
     /** @var ArrayObject */
     protected $_cookies;
 
-    public function __construct() {
-        $factory        = new RequestFactory();
-        $this->_handler = $factory->fromGlobals();
+    /** @var ArrayObject */
+    protected $_servers;
 
-        $this->_query   = ArrayObject::from($this->_handler->getQuery());
-        $this->_post    = ArrayObject::from($this->_handler->getPost());
-        $this->_rawBody = $this->_handler->getRawBody();
-        $this->_headers = ArrayObject::from($this->_handler->getHeaders());
-        $this->_cookies = ArrayObject::from($this->_handler->getCookies());
+    public function __construct() {
+        $request = ActuallyRequest::createFromGlobals();
+
+        $this->_query   = ArrayObject::from($request->query->all());
+        $this->_post    = ArrayObject::from($request->request->all());
+        $this->_rawBody = $request->getContent();
+        $this->_headers = ArrayObject::from($request->headers->all());
+        $this->_cookies = ArrayObject::from($request->cookies->all());
+        $this->_servers = ArrayObject::from($request->server->all());
 
         if (strtolower($this->_headers->get('content-type', '')) === 'application/json') {
             $this->_post = ArrayObject::from(json_decode($this->_rawBody, true) ?: []);
         }
+
+        $this->_operator = $request;
     }
 
     /**
-     * @return \Nette\Http\Request
+     * @return ActuallyRequest
      */
-    protected function handler() {
-        return $this->_handler;
+    protected function operator(): ActuallyRequest {
+        return $this->_operator;
     }
 
     /**
@@ -144,7 +149,7 @@ class Request {
      * @return mixed
      */
     public function server($key = null, $def = null) {
-        return $this->header($key, $def);
+        return $this->_servers->get($key, $def);
     }
 
     /**
@@ -157,12 +162,30 @@ class Request {
     }
 
     /**
+     * Returns the client IP address.
+     *
+     * @return string|null
+     */
+    public function getClientIp(): ?string {
+        return $this->operator()->getClientIp();
+    }
+
+    /**
+     * Returns the client IP addresses.
+     *
+     * @return array
+     */
+    public function getClientIps(): array {
+        return $this->operator()->getClientIps();
+    }
+
+    /**
      * Returns the IP address of the remote client.
      *
      * @return string|null
      */
     public function getRemoteAddress(): ?string {
-        return $this->handler()->getRemoteAddress();
+        return $this->getClientIp();
     }
 
     /**
@@ -171,7 +194,11 @@ class Request {
      * @return string|null
      */
     public function getRemoteHost(): ?string {
-        return $this->handler()->getRemoteHost();
+        return $this->server('REMOTE_HOST', $this->getRemoteAddress());
+    }
+
+    public function getHost() {
+        return $this->operator()->getHost();
     }
 
     /**
@@ -180,7 +207,7 @@ class Request {
      * @return string
      */
     public function getMethod() {
-        return $this->handler()->getMethod();
+        return $this->operator()->getRealMethod();
     }
 
     /**
@@ -196,7 +223,7 @@ class Request {
      * @return string
      */
     public function getRequestUri(): string {
-        return $this->handler()->getUrl()->getPath();
+        return $this->operator()->getRequestUri();
     }
 
 
