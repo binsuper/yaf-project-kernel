@@ -2,7 +2,7 @@
 
 namespace Gino\Yaf\Kernel;
 
-use Nette\Http\IResponse;
+use Symfony\Component\HttpFoundation\Response as ActuallyResponse;
 
 class Response {
 
@@ -131,20 +131,20 @@ class Response {
         511 => 'Network Authentication Required',
     ];
 
-    /** @var \Nette\Http\Response */
-    protected $_handler;
+    /** @var ActuallyResponse */
+    protected $_operator;
 
     protected $body = '';
 
     public function __construct() {
-        $this->_handler = new \Nette\Http\Response();
+        $this->_operator = new ActuallyResponse();
     }
 
     /**
-     * @return \Nette\Http\Response
+     * @return ActuallyResponse
      */
-    public function handler() {
-        return $this->_handler;
+    public function operator() {
+        return $this->_operator;
     }
 
     /**
@@ -155,7 +155,7 @@ class Response {
      * @return $this
      */
     public function setCode(int $code, ?string $reason = null) {
-        $this->handler()->setCode($code, $reason ?: (static::REASON_PHRASES[$code] ?? null));
+        $this->operator()->setStatusCode($code, $reason ?: (static::REASON_PHRASES[$code] ?? null));
         return $this;
     }
 
@@ -163,7 +163,7 @@ class Response {
      * 返回http响应状态码
      */
     public function getCode(): int {
-        return $this->handler()->getCode();
+        return $this->operator()->getStatusCode();
     }
 
     /**
@@ -172,7 +172,7 @@ class Response {
      * @return $this
      */
     public function setHeader(string $name, ?string $val = null) {
-        $this->handler()->setHeader($name, $val);
+        $this->operator()->headers->set($name, $val);
         return $this;
     }
 
@@ -183,7 +183,7 @@ class Response {
      * @return $this
      */
     public function setBody($body) {
-        $this->body = (string)$body;
+        $this->operator()->setContent($body);
         return $this;
     }
 
@@ -193,15 +193,15 @@ class Response {
      * @return string
      */
     public function getBody() {
-        return $this->body;
+        return $this->operator()->getContent() ?: '';
     }
 
 
     /**
-     * display body
+     * Sends HTTP headers and content.
      */
     public function display() {
-        echo (string)$this->body;
+        $this->operator()->send();
     }
 
     /**
@@ -209,6 +209,7 @@ class Response {
      */
     public function flush() {
         $this->display();
+
     }
 
 }
