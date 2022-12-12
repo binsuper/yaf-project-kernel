@@ -199,6 +199,16 @@ class Request {
         return $this->server('REMOTE_HOST', $this->getRemoteAddress());
     }
 
+    /**
+     * Returns the host name.
+     *
+     * This method can read the client host name from the "X-Forwarded-Host" header
+     * when trusted proxies were set via "setTrustedProxies()".
+     *
+     * The "X-Forwarded-Host" header must contain the client host name.
+     *
+     * @return string
+     */
     public function getHost() {
         return $this->operator()->getHost();
     }
@@ -222,10 +232,30 @@ class Request {
     }
 
     /**
-     * @return string
+     * Returns the requested URI (path and query string).
+     *
+     * @return string The raw URI (i.e. not URI decoded)
      */
     public function getRequestUri(): string {
         return $this->operator()->getRequestUri();
+    }
+
+    /**
+     * Returns the path being requested relative to the executed script.
+     *
+     * The path info always starts with a /.
+     *
+     * Suppose this request is instantiated from /mysite on localhost:
+     *
+     *  * http://localhost/mysite              returns an empty string
+     *  * http://localhost/mysite/about        returns '/about'
+     *  * http://localhost/mysite/enco%20ded   returns '/enco%20ded'
+     *  * http://localhost/mysite/about?var=1  returns '/about'
+     *
+     * @return string The raw path (i.e. not urldecoded)
+     */
+    public function getRequestPath(): string {
+        return $this->operator()->getPathInfo();
     }
 
 
