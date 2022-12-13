@@ -34,9 +34,9 @@ class RouteCollector extends \FastRoute\RouteCollector {
      * @return $this
      */
     public function addRoute($httpMethod, $route, $handler) {
-        if ($route[0] !== '/') {
-            $route = '/' . $route;
-        }
+//        if ($route[0] !== '/') {
+//            $route = '/' . $route;
+//        }
 
         $current_middlewares       = array_merge($this->current_group_middlewares ?: [], $this->current_middlewares ?: []);
         $this->current_middlewares = false;
