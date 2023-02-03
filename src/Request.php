@@ -11,36 +11,36 @@ class Request {
     protected $_operator;
 
     /** @var ArrayObject */
-    protected $_query;
+    public $v_query;
 
     /** @var ArrayObject */
-    protected $_post;
+    public $v_post;
 
     protected $_rawBody;
 
     /** @var ArrayObject */
-    protected $_headers;
+    public $v_headers;
 
     /** @var ArrayObject */
-    protected $_cookies;
+    public $v_cookies;
 
     /** @var ArrayObject */
-    protected $_servers;
+    public $v_servers;
 
     public function __construct() {
         $request = ActuallyRequest::createFromGlobals();
 
-        $this->_query   = ArrayObject::from($request->query->all());
-        $this->_post    = ArrayObject::from($request->request->all());
+        $this->v_query  = ArrayObject::from($request->query->all());
+        $this->v_post   = ArrayObject::from($request->request->all());
         $this->_rawBody = $request->getContent();
-        $this->_headers = ArrayObject::from(array_map(function ($v) {
+        $this->v_headers = ArrayObject::from(array_map(function ($v) {
             return $v[0] ?? '';
         }, $request->headers->all()));
-        $this->_cookies = ArrayObject::from($request->cookies->all());
-        $this->_servers = ArrayObject::from($request->server->all());
+        $this->v_cookies = ArrayObject::from($request->cookies->all());
+        $this->v_servers = ArrayObject::from($request->server->all());
 
-        if (strtolower($this->_headers->get('content-type', '')) === 'application/json') {
-            $this->_post = ArrayObject::from(json_decode($this->_rawBody, true) ?: []);
+        if (strtolower($this->v_headers->get('content-type', '')) === 'application/json') {
+            $this->v_post = ArrayObject::from(json_decode($this->_rawBody, true) ?: []);
         }
 
         $this->_operator = $request;
@@ -82,7 +82,7 @@ class Request {
      * @return $this
      */
     public function setQuery($key, $val = null) {
-        $this->_query->set($key, $val);
+        $this->v_query->set($key, $val);
         return $this;
     }
 
@@ -103,7 +103,7 @@ class Request {
      * @return array|ArrayObject|mixed|null
      */
     public function input($key = null, $def = null) {
-        return ArrayObject::from($this->_post->toArray() + $this->_query->toArray())->get($key, $def);
+        return ArrayObject::from($this->v_post->toArray() + $this->v_query->toArray())->get($key, $def);
     }
 
     /**
@@ -115,7 +115,7 @@ class Request {
      * @return mixed
      */
     public function query($key = null, $def = null) {
-        return $this->_query->get($key, $def);
+        return $this->v_query->get($key, $def);
     }
 
     /**
@@ -127,7 +127,7 @@ class Request {
      * @return mixed
      */
     public function post($key = null, $def = null) {
-        return $this->_post->get($key, $def);
+        return $this->v_post->get($key, $def);
     }
 
     /**
@@ -154,7 +154,7 @@ class Request {
                 $v = strtolower($v);
             });
         }
-        return $this->_headers->get($key, $def);
+        return $this->v_headers->get($key, $def);
     }
 
     /**
@@ -172,7 +172,7 @@ class Request {
      * @return mixed
      */
     public function server($key = null, $def = null) {
-        return $this->_servers->get($key, $def);
+        return $this->v_servers->get($key, $def);
     }
 
     /**
@@ -181,7 +181,7 @@ class Request {
      * @return mixed
      */
     public function cookie($key = null, $def = null) {
-        return $this->_cookies->get($key, $def);
+        return $this->v_cookies->get($key, $def);
     }
 
     /**
