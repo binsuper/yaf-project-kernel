@@ -77,7 +77,7 @@ class MiddlewarePlugin extends Plugin_Abstract {
             $this->nextCall(App::request(), $middlewares, function (IMiddleware $middleware, callable $next) use ($request, &$called) {
                 $middleware->handler(App::request(), $next);
                 // 执行后再执行
-                array_unshift($called, $middleware);
+                array_push($called, $middleware);
                 $request->setParam(static::IS_CALL, $called);
             });
         } catch (MiddlewareBreakOff $ex) {
