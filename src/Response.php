@@ -177,6 +177,19 @@ class Response {
     }
 
     /**
+     * @param string|null $name
+     * @param null $def
+     * @return array|mixed
+     */
+    public function getHeader(?string $name = null, $def = null) {
+        if ($name === null) {
+            return $this->operator()->headers->all();
+        } else {
+            return $this->operator()->headers->get($name, $def);
+        }
+    }
+
+    /**
      * 设置body
      *
      * @param string $body
