@@ -53,6 +53,7 @@ class Route implements \Yaf\Route_Interface {
         $handler = $routeInfo[1];
         $vars    = $routeInfo[2];
         $config  = Application::app()->getConfig();
+        $yaf_dispatcher = Application::app()->getDispatcher();
 
         $route      = $handler['route'];
         $middleware = $handler['middleware'] ?? [];
@@ -63,10 +64,13 @@ class Route implements \Yaf\Route_Interface {
         $action     = $route[2] ?? null;
 
         if (is_null($controller)) {
-            $controller = $config->get('application.dispatcher.defaultController') ?: 'index';
-            $action     = $config->get('application.dispatcher.defaultAction') ?: 'index';
+            $action     = $module;
+            $controller = $yaf_dispatcher->getDefaultModule();
+            $module = $yaf_dispatcher->getDefaultModule();
         } else if (is_null($action)) {
-            $action = $config->get('application.dispatcher.defaultAction') ?: 'index';
+            $action = $controller;
+            $controller = $module;
+            $module = $yaf_dispatcher->getDefaultModule();
         }
 
         Log::channel()->debug('route dispatch to', ['Module' => $module, 'Controller' => $controller, 'Action' => $action]);
