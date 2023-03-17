@@ -68,6 +68,15 @@ class Request {
     }
 
     /**
+     * Determine if request is CLI request
+     *
+     * @return bool
+     */
+    public function isCli(): bool {
+        return \Yaf\Application::app()->getDispatcher()->getRequest()->isCli();
+    }
+
+    /**
      * @return ActuallyRequest
      */
     public function operator(): ActuallyRequest {
