@@ -3,7 +3,6 @@
 namespace Gino\Yaf\Kernel\Cache;
 
 use Gino\Phplib\ArrayObject;
-use Gino\Yaf\Kernel\Cache\Marshaller\JsonMarshaller;
 use Gino\Yaf\Kernel\Exception\BadConfigurationException;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -57,10 +56,10 @@ class Manager {
 
     /**
      * @param string $name
-     * @return Cache|null
+     * @return CacheHandler|null
      * @throws BadConfigurationException
      */
-    public static function cache(string $name = ''): ?Cache {
+    public static function cache(string $name = ''): ?CacheHandler {
 
         if (isset(static::$global_caches[$name])) {
             return static::$global_caches[$name];
@@ -78,7 +77,7 @@ class Manager {
             return null;
         }
 
-        static::$global_caches[$name] = new Cache($pool);
+        static::$global_caches[$name] = new CacheHandler($pool);
         return static::$global_caches[$name];
     }
 
