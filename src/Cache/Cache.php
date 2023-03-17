@@ -14,6 +14,8 @@ namespace Gino\Yaf\Kernel\Cache;
  * @method static mixed remember(string $key, \DateTimeInterface|\DateInterval|int $ttl, \Closure $callback)
  * @method static mixed rememberForever(string $key, \Closure $callback)
  *
+ * @method static null|CacheHandler cache(string $name = ''):
+ *
  * @see CacheHandler
  */
 class Cache {
@@ -22,6 +24,9 @@ class Cache {
      * @inheritDoc
      */
     public static function __callStatic($name, $arguments) {
+        if ($name === 'cache') {
+            return Manager::$name(...$arguments);
+        }
         $cache = Manager::cache();
         if (method_exists($cache, $name)) {
             return $cache->$name(...$arguments);
