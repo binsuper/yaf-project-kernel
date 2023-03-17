@@ -30,9 +30,9 @@ class Request {
     public function __construct() {
         $request = ActuallyRequest::createFromGlobals();
 
-        $this->v_query  = ArrayObject::from($request->query->all());
-        $this->v_post   = ArrayObject::from($request->request->all());
-        $this->_rawBody = $request->getContent();
+        $this->v_query   = ArrayObject::from($request->query->all());
+        $this->v_post    = ArrayObject::from($request->request->all());
+        $this->_rawBody  = $request->getContent();
         $this->v_headers = ArrayObject::from(array_map(function ($v) {
             return $v[0] ?? '';
         }, $request->headers->all()));
@@ -70,7 +70,7 @@ class Request {
     /**
      * @return ActuallyRequest
      */
-    protected function operator(): ActuallyRequest {
+    public function operator(): ActuallyRequest {
         return $this->_operator;
     }
 
@@ -232,6 +232,38 @@ class Request {
      */
     public function getHost() {
         return $this->operator()->getHost();
+    }
+
+    /**
+     * Returns the HTTP host being requested.
+     *
+     * The port name will be appended to the host if it's non-standard.
+     *
+     * @return string
+     */
+    public function getHttpHost(): string {
+        return $this->operator()->getHttpHost();
+    }
+
+    /**
+     * Gets the scheme and HTTP host.
+     *
+     * If the URL was called with basic authentication, the user
+     * and the password are not added to the generated string.
+     *
+     * @return string The scheme and HTTP host
+     */
+    public function getSchemeAndHttpHost(): string {
+        return $this->operator()->getSchemeAndHttpHost();
+    }
+
+    /**
+     * Gets the request's scheme.
+     *
+     * @return string
+     */
+    public function getScheme(): string {
+        return $this->operator()->getScheme();
     }
 
     /**
