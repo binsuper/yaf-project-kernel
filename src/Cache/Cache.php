@@ -13,6 +13,7 @@ namespace Gino\Yaf\Kernel\Cache;
  * @method static bool has(string $key)
  * @method static mixed remember(string $key, \DateTimeInterface|\DateInterval|int $ttl, \Closure $callback)
  * @method static mixed rememberForever(string $key, \Closure $callback)
+ * @method static CacheHandler disNamespace(bool $state = true)
  *
  * @method static null|CacheHandler cache(string $name = ''):
  *
@@ -28,10 +29,14 @@ class Cache {
             return Manager::$name(...$arguments);
         }
         $cache = Manager::cache();
-        if (method_exists($cache, $name)) {
-            return $cache->$name(...$arguments);
-        }
-        throw new \Exception('undefined method ' . $name . ' in ' . gettype($cache));
+        return $cache->$name(...$arguments);
+    }
+
+    /**
+     * 禁用命名空间
+     */
+    public static function disGlobalNamespace() {
+        Manager::setGlobalNamespace(false);
     }
 
 }
