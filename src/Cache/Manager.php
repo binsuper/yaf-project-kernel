@@ -62,7 +62,7 @@ class Manager {
      */
     public static function startup(array $options) {
         static::$global_options = $options;
-        static::setGlobalNamespace($options['namespace'] ?? '');
+        static::setGlobalNamespace($options['namespace'] ?? false);
     }
 
     /**
