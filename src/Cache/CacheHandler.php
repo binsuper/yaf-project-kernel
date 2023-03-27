@@ -7,6 +7,7 @@ use DateInterval;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 use Symfony\Component\Cache\Psr16Cache;
+use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * @mixin Psr16Cache
@@ -66,6 +67,7 @@ class CacheHandler {
      * @return string
      */
     public function getCacheKey(string $name): string {
+        $name = strtr($name, ItemInterface::RESERVED_CHARACTERS, str_repeat('_', strlen(ItemInterface::RESERVED_CHARACTERS)));
         $gns = Manager::getGlobalNamespace();
         if (false === $gns || $this->disable_namespace) return $name;
         $ns = $this->getNamespace();
