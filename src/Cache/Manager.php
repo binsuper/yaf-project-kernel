@@ -3,13 +3,41 @@
 namespace Gino\Yaf\Kernel\Cache;
 
 use Gino\Phplib\ArrayObject;
-use Gino\Yaf\Kernel\Cache\Marshaller\JsonMarshaller;
 use Gino\Yaf\Kernel\Exception\BadConfigurationException;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Marshaller\MarshallerInterface;
 
+/**
+ * 配置参考
+ * [
+ *      // Default Cache Stores Name
+ *      'default' => env('cache.default', 'file'),
+ *
+ *      'namespace' => '',
+ *
+ *      // Cache Stores Options
+ *      'stores'  => [
+ *
+ *          'file' => [
+ *              'driver'    => 'file',
+ *              'directory' => 'var/cache/',
+ *              'namespace' => '',
+ *          ],
+ *
+ *          'redis' => [
+ *              'driver'   => 'redis',
+ *              'host'     => '127.0.0.1',
+ *              'port'     => '6379',
+ *              'password' => '',
+ *              'database' => 0,
+ *          ],
+ *      ],
+ * ]
+ *
+ *
+ */
 class Manager {
 
     /** @var array */
@@ -17,6 +45,9 @@ class Manager {
 
     /** @var array */
     private static $global_caches = [];
+
+    /** @var string|bool 全局键名前缀 */
+    private static $global_namespace = '';
 
     protected $options = [];
 
@@ -31,6 +62,25 @@ class Manager {
      */
     public static function startup(array $options) {
         static::$global_options = $options;
+        static::setGlobalNamespace($options['namespace'] ?? false);
+    }
+
+    /**
+     * 获取命名空间
+     *
+     * @return string|bool
+     */
+    public static function getGlobalNamespace() {
+        return static::$global_namespace;
+    }
+
+    /**
+     * 设置命名空间
+     *
+     * @param string|bool $namespace
+     */
+    public static function setGlobalNamespace($namespace) {
+        static::$global_namespace = $namespace;
     }
 
     /**
@@ -57,10 +107,10 @@ class Manager {
 
     /**
      * @param string $name
-     * @return Cache|null
+     * @return CacheHandler|null
      * @throws BadConfigurationException
      */
-    public static function cache(string $name = ''): ?Cache {
+    public static function cache(string $name = ''): ?CacheHandler {
 
         if (isset(static::$global_caches[$name])) {
             return static::$global_caches[$name];
@@ -78,7 +128,12 @@ class Manager {
             return null;
         }
 
-        static::$global_caches[$name] = new Cache($pool);
+        $cache = new CacheHandler($pool);
+        if (isset($config['namespace'])) {
+            $cache->setNamespace($config['namespace'] ?? '');
+        }
+
+        static::$global_caches[$name] = $cache;
         return static::$global_caches[$name];
     }
 
