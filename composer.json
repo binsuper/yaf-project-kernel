@@ -9,14 +9,14 @@
     ],
     "license": "MIT",
     "require": {
-        "php": ">=7.2.33",
+        "php": ">=7.4",
         "ext-yaf": "^3.0",
         "nikic/fast-route": "^1.3",
         "monolog/monolog": "^2.8",
         "binsuper/phplib": "^1.0",
         "illuminate/database": "^7.30",
         "symfony/cache": "^4.4",
-        "symfony/http-foundation": "^4.4"
+        "symfony/http-foundation": "^5.4"
     },
     "autoload": {
         "psr-4": {
