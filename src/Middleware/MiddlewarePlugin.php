@@ -64,11 +64,12 @@ class MiddlewarePlugin extends Plugin_Abstract {
         }
 
         array_walk($middlewares, function (&$name) {
-            $class = $this->classes->get($name, false);
+            $parts = explode(':', $name, 2);
+            $class = $this->classes->get($parts[0], false);
             if (false === $class) {
                 throw new MiddlewareFailure(sprintf('unknown middleware "%s"', $name));
             }
-            $name = $class;
+            $name = [$class, $parts[1] ?? ''];
         });
 
         $called = [];
@@ -77,7 +78,7 @@ class MiddlewarePlugin extends Plugin_Abstract {
             $this->nextCall(App::request(), $middlewares, function (IMiddleware $middleware, callable $next) use ($request, &$called) {
                 $middleware->handler(App::request(), $next);
                 // 执行后再执行
-                array_push($called, $middleware);
+                array_push($called, [$middleware, '']);
                 $request->setParam(static::IS_CALL, $called);
             });
         } catch (MiddlewareBreakOff $ex) {
@@ -134,13 +135,12 @@ class MiddlewarePlugin extends Plugin_Abstract {
      */
     public function nextCall(Request $request, array &$middlewares, callable $callback) {
         if (empty($middlewares)) return;
-
-        $class_name = array_shift($middlewares);
+        [$class_name, $class_args] = array_shift($middlewares);
 
         if ($class_name instanceof IMiddleware) {
             $object = $class_name;
         } else {
-            $object = new $class_name();
+            $object = new $class_name($class_args);
             if (!($object instanceof IMiddleware)) {
                 throw new MiddlewareFailure('unsupported middleware ' . $class_name);
             }
