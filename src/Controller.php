@@ -14,14 +14,14 @@ class Controller extends \Yaf\Controller_Abstract {
     /**
      * @return Request
      */
-    public function getRequest() {
+    public function getRequest(): ?object {
         return App::request();
     }
 
     /**
      * @return Response
      */
-    public function getResponse() {
+    public function getResponse(): ?object {
         return App::response();
     }
 
