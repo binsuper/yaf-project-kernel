@@ -6,7 +6,7 @@ use Gino\Yaf\Kernel\Exception\UnsupportedException;
 
 class Controller extends \Yaf\Controller_Abstract {
 
-    public function forward($arg1, $args2 = NULL, $args3 = NULL, $args4 = NULL) {
+    public function forward($arg1, $args2 = NULL, $args3 = NULL, $args4 = NULL): ?bool {
         // forward forbidden
         throw new UnsupportedException();
     }
